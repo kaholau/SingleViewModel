@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
 		if not self.getCurrentFile():
 			return
 
-		fileFormat ='png'
+		'''fileFormat ='png'
 		initialPath = QDir.currentPath() + self.getCurrentFile()+'*.' + fileFormat
 		fileName, _ = QFileDialog.getSaveFileName(self, "Save As", initialPath,
 				"%s Files (*.%s);;All Files (*)" % (fileFormat.upper(), fileFormat))
@@ -127,7 +127,9 @@ class MainWindow(QMainWindow):
 			if not self.graphicsView.widget().pixmap().save(fileName):
 				QMessageBox.warning(self, self.tr("Save Image"),self.tr("Failed to save file at the specified location."))
 				return
-			self.statusBar().showMessage("File saved", 2000)
+			self.statusBar().showMessage("File saved", 2000)'''
+
+		self.graphicsView.imageWidget.saveConfig()
 		
 		return
 

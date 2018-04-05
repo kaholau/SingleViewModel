@@ -17,8 +17,10 @@ class ImageViewer(QScrollArea):
 		super(ImageViewer, self).__init__(parent)
 		self.isModified = False
 		self.isReady = False
+		self.isRestore = False
+
 		#Drawing Status
-		self.isDrawVanishingLineStart = False
+		self.isDrawParallelLineStart = False
 		self.curAxis = None
 		self.isMarkReferencePointStart = False
 		self.isGenVRMLStart = False
@@ -28,7 +30,7 @@ class ImageViewer(QScrollArea):
 		self.isGenVRMLDone = False	
 
 		#store line info
-		self.vanishingLines = {'x' : [], 'y' : [], 'z' : [], None:[]} # list of [[start pt, end pt],[]......]
+		#self.parallelLines = {'x' : [], 'y' : [], 'z' : [], None:[]} # list of [[start pt, end pt],[]......]
 		self.axisColor = {'x' : (255,0,0), 'y' : (0,255,0), 'z' : (0,0,255)}
 		self.tempPoint = [] # store 
 		self.refGroundList = [] 
@@ -77,32 +79,41 @@ class ImageViewer(QScrollArea):
 		print(self.qImageSize,self.hieghtbound,self.widthbound )
 
 		self.imageWidget.start(fileName)
+		fileName = fileName.split('.')[0] + '.json'
 		config = self.imageWidget.initConfig(fileName)
 		self.isReady = True
 		return
 
 	def drawStart(self,act):
+		self.isDrawParallelLineStart = False
+		self.isMarkReferencePointStart = False
 		if act in ['x', 'y', 'z']:
 			 self.drawParallelLineStart(act)
 		else:
 			print('TODO: ref point')
 
+	def cleanPaintBoard(self):
+		self.paintBoard = self.cvImg.copy()
+		self.qImage = self.get_qimage(self.paintBoard)
+		self.imageWidget.setPixmap(self.qImage)
+		return
 
 	def drawParallelLineStart(self,axis):
 		if self.isReady:			
-			if not self.isDrawVanishingLineStart :
-				print('drawParallelLineStart :', axis)
+			if not self.isDrawParallelLineStart :
 				self.curAxis = axis
-				self.isDrawVanishingLineStart = True
+				self.isDrawParallelLineStart = True
+
+				print('drawParallelLineStart :', axis)
+				self.cleanPaintBoard()
+				lines = self.imageWidget.getParallelLine(axis)
+				print(lines)
+				if len(lines) > 0 :
+					for p in lines:
+						self.drawParallelLine(True, p[0], p[1])
+				
 
 		return
-	def drawVanishingLineDone(self,axis):
-		if self.isDrawVanishingLineStart:
-			if self.computeVanishingPoint(axis):
-				self.isDrawVanishingLineStart = False
-				self.curAxis = None
-				return True
-		return False
 
 	def resize(self, factor):
 		self.imageScaleFactor = factor		
@@ -131,7 +142,7 @@ class ImageViewer(QScrollArea):
 			isGoal,x,y = self.getOriginalCoordinate(event)
 			if isGoal:
 				self.isMousePressed = True
-				if self.isDrawVanishingLineStart:
+				if self.isDrawParallelLineStart:
 					self.tempPoint.append([x,y])
 					#self.drawPoint(self.paintBoard, [x,y])
 		return 
@@ -141,8 +152,8 @@ class ImageViewer(QScrollArea):
 			isGoal,x,y = self.getOriginalCoordinate(event)
 			if isGoal:
 				isMouseMove = True
-				if self.isDrawVanishingLineStart:
-					self.drawVanishingLine(False, self.paintBoard, self.tempPoint[0], [x,y])
+				if self.isDrawParallelLineStart:
+					self.drawParallelLine(False, self.tempPoint[0], [x,y])
 
 		return      
 
@@ -151,10 +162,10 @@ class ImageViewer(QScrollArea):
 		if self.isReady:
 			isGoal,x,y = self.getOriginalCoordinate(event)
 			if isGoal:
-				if self.isDrawVanishingLineStart:
+				if self.isDrawParallelLineStart:
 					self.tempPoint.append([x,y])
-					self.drawVanishingLine(True, self.paintBoard, self.tempPoint[0], self.tempPoint[1])
-					self.vanishingLines[self.curAxis].append(self.tempPoint)
+					self.drawParallelLine(True, self.tempPoint[0], self.tempPoint[1])
+					self.imageWidget.addParallelLine(self.curAxis, self.tempPoint)
 					self.tempPoint = []
 		return  
 
@@ -170,7 +181,7 @@ class ImageViewer(QScrollArea):
 		self.imageWidget.setPixmap(self.qImage)
 		return
 
-	def drawVanishingLine(self,isConfirm, img,sPt,ePt):
+	def drawParallelLine(self,isConfirm,sPt,ePt):
 		if isConfirm:
 			#it is confirmed when user release the mouse
 			img = self.paintBoard 
@@ -183,10 +194,10 @@ class ImageViewer(QScrollArea):
 		return
 
 	def computeVanishingPoint(self,axis):
-		self.vanishingLines[axis] = [[[276, 148], [214, 295]], [[335, 146], [383, 313]]]
-		if len( self.vanishingLines[axis]) > 1 :
-			print('vanishingLineList: ', self.vanishingLines[axis])
-			pt = self.imageWidget.computeVanishingPoint(self.vanishingLines[axis], axis)
+		self.parallelLines[axis] = [[[276, 148], [214, 295]], [[335, 146], [383, 313]]]
+		if len( self.parallelLines[axis]) > 1 :
+			print('vanishingLineList: ', self.parallelLines[axis])
+			pt = self.imageWidget.computeVanishingPoint(self.parallelLines[axis], axis)
 			print('vanishing pt: ',pt)
 			self.drawPoint(self.paintBoard,pt)
 			return True
@@ -200,14 +211,11 @@ class ImageViewer(QScrollArea):
 		image = image.rgbSwapped()
 		return QPixmap.fromImage(image)
 
-	def clean(self):
+	def clean(self, act):
 		if self.isReady:
-			self.vanishingLines = []
-			self.tempPoint = [] 
-			self.refGroundList = [] 
-			self.paintBoard = self.cvImg.copy()
-			self.qImage = self.get_qimage(self.paintBoard)
-			self.imageWidget.setPixmap(self.qImage)
+			self.tempPoint = []
+			self.imageWidget.clean(act)
+			self.cleanPaintBoard()
 		return
 
 	def isModified(self):

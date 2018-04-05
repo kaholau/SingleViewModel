@@ -1,0 +1,36 @@
+{
+    "x": {
+        "vanishingPoint": [],
+        "linePoints": []
+    },
+    "r": [
+        [
+            [
+                276,
+                148
+            ],
+            [
+                214,
+                295
+            ]
+        ],
+        [
+            [
+                335,
+                146
+            ],
+            [
+                383,
+                313
+            ]
+        ]
+    ],
+    "z": {
+        "vanishingPoint": [],
+        "linePoints": []
+    },
+    "y": {
+        "vanishingPoint": [],
+        "linePoints": []
+    }
+}
