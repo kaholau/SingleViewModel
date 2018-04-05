@@ -6,7 +6,6 @@ from PyQt5.QtWidgets import (QGraphicsView, QGraphicsScene, QAction, QActionGrou
 		QWidget)
 import imageviewer
 import image
-		
 
 class MainWindow(QMainWindow):
 	def __init__(self):
@@ -27,6 +26,7 @@ class MainWindow(QMainWindow):
 		self.setMinimumSize(680,480)
 
 		self.curFile = ''
+		self.curDraw = ''
 		self.isModified = False
 
 		self.createActions()
@@ -35,9 +35,9 @@ class MainWindow(QMainWindow):
 		self.createStatusBar()
 
 
-		self.drawVanishingLineXAct.setEnabled(False)
-		self.drawVanishingLineYAct.setEnabled(False)
-		self.drawVanishingLineZAct.setEnabled(False)
+		self.drawParallelLineXAct.setEnabled(False)
+		self.drawParallelLineYAct.setEnabled(False)
+		self.drawParallelLineZAct.setEnabled(False)
 		self.markReferencePointAct.setEnabled(False)
 		self.genVRMLAct.setEnabled(False)
 
@@ -46,6 +46,10 @@ class MainWindow(QMainWindow):
 		self.zoomInAct.setEnabled(False)
 		self.zoomOutAct.setEnabled(False)	
 				
+		return
+	def setDebug(self,isDebug):
+		self.debugOn = isDebug
+
 		return
 
 	def eventFilter(self, obj, event):
@@ -58,9 +62,11 @@ class MainWindow(QMainWindow):
 		return
 	#===========================Menu>File Action Funtion===================================#
 	def open(self):
+		if self.debugOn:
+			fileName = self.root + '/picture/example.png'
+		else:
+			fileName, _ = QFileDialog.getOpenFileName(self, "Open Image", QDir.currentPath())
 
-		#fileName, _ = QFileDialog.getOpenFileName(self, "Open Image", QDir.currentPath())
-		fileName = self.root + '/picture/parallel1.jpg'
 		if fileName:
 			qimage = QImage(fileName)
 			if qimage.isNull():
@@ -72,13 +78,21 @@ class MainWindow(QMainWindow):
 			imageLabel.setBackgroundRole(QPalette.Base)
 			imageLabel.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored)
 			imageLabel.setScaledContents(True)
-			imageLabel.setPixmap(QPixmap.fromImage(qimage))
+			pic = QPixmap.fromImage(qimage)
+			imageLabel.setPixmap(pic)
+			self.resize(pic.width()+50,pic.height()+100)
 
+			self.graphicsView.setDebug(self.debugOn)
 			self.graphicsView.setWidget(imageLabel)
 			self.graphicsView.initForImage(fileName)
 			self.scaleFactor = 1.0
 			self.normalSize()
-			self.drawVanishingLineXAct.setEnabled(True)
+			self.drawParallelLineXAct.setEnabled(True)
+			self.drawParallelLineXAct.setEnabled(True)
+			self.drawParallelLineYAct.setEnabled(True)
+			self.drawParallelLineZAct.setEnabled(True)
+			self.markReferencePointAct.setEnabled(True)
+			self.genVRMLAct.setEnabled(True)
 			self.cleanAct.setEnabled(True)
 			self.normalSizeAct.setEnabled(True)
 			self.zoomInAct.setEnabled(True)
@@ -124,7 +138,7 @@ class MainWindow(QMainWindow):
 
 	#===========================Menu>Edit Action Function================================#
 	def clean(self):
-		self.graphicsView.clean()
+		self.graphicsView.clean(self.curDraw)
 		return
 
 	def undo(self):
@@ -170,33 +184,47 @@ class MainWindow(QMainWindow):
 		return
 	
 	#=========================Menu>Action Action Function================================#
+	def unselectAllactionIcon(self):
+		self.drawParallelLineXAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['x']['normal']))
+		self.drawParallelLineYAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['y']['normal']))
+		self.drawParallelLineZAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['z']['normal']))
+		self.markReferencePointAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['r']['normal']))
+		return	
 
-	def drawVanishingLineX(self):
-		print('drawVanishingLineX')
-		self.graphicsView.drawVanishingLineStart('x')
-		if self.graphicsView.drawVanishingLineDone('x'):
-			self.drawVanishingLineYAct.setEnabled(True)
+	def selectIcon(self,act):
+		self.unselectAllactionIcon()
+		icon = QIcon()
+		icon.addPixmap(QPixmap(self.root + '/icon/' + self.actionIconPathDict[act]['selected']))
+		self.actionIconPathDict[act]['act'].setIcon(icon)
+
+		return	
+	def draw(self, axis):
+		self.selectIcon(self.curDraw)
+		self.graphicsView.drawStart(self.curDraw)
+		return 
+
+	def drawParallelLineX(self):
+		print('drawParallelLineX')
+		self.curDraw = 'x'
+		self.draw(self.curDraw)
 		return
 
-	def drawVanishingLineY(self):
-		print('drawVanishingLineY')
-		self.graphicsView.drawVanishingLineStart('y')
-		if self.graphicsView.drawVanishingLineDone('y'):
-			self.drawVanishingLineZAct.setEnabled(True)
+	def drawParallelLineY(self):
+		print('drawParallelLineY')
+		self.curDraw = 'y'
+		self.draw(self.curDraw)
 		return
 
-	def drawVanishingLineZ(self):
-		print('drawVanishingLineZ')
-		self.graphicsView.drawVanishingLineStart('z')
-		if self.graphicsView.drawVanishingLineDone('z'):
-			self.markReferencePointAct.setEnabled(True)
+	def drawParallelLineZ(self):
+		print('drawParallelLineZ')
+		self.curDraw = 'z'
+		self.draw(self.curDraw)
 		return
 
 	def markReferencePoint(self):
 		print('markReferencePoint')
-		self.graphicsView.markReferencePointStart(True)
-		if self.graphicsView.markReferencePointDone():
-			self.genVRMLAct.setEnabled(True)
+		self.curDraw = 'r'
+		self.draw(self.curDraw)
 		return
 
 	def genVRML(self):
@@ -289,20 +317,39 @@ class MainWindow(QMainWindow):
 				triggered=self.normalSize)			
 
 		#================================Action================================#
+		'''def createQIcon(nPath,sPath):
+			icon = QIcon()
+			icon.addPixmap(QPixmap(self.root + '/icon/'+nPath))
+			#icon.addPixmap(QPixmap(self.root + '/icon/'+sPath), QIcon.Selected)
+			#icon.addPixmap(QPixmap(self.root + '/icon/'+sPath), QIcon.Active)
+			icon.addPixmap(QPixmap(self.root + '/icon/'+sPath), QIcon.Selected, QIcon.On)
+			icon.addPixmap(QPixmap(self.root + '/icon/'+sPath), QIcon.Active, QIcon.On)
+			return icon'''
+		self.actionIconPathDict = {
+			'x':{'normal':'x.png','selected':'x_selected.png'},
+			'y':{'normal':'y.png','selected':'y_selected.png'},
+			'z':{'normal':'z.png','selected':'z_selected.png'},
+			'r':{'normal':'r.png','selected':'r_selected.png'}}
 
-		self.drawVanishingLineXAct = QAction(QIcon(self.root + '/icon/x.png'), "drawVanishingLineX", self, shortcut="1",
-		statusTip="&Draw at least 2 vanishing lines for X axis",triggered=self.drawVanishingLineX)
+		self.iconDir = self.root +'/icon/'
+		self.drawParallelLineXAct = QAction(QIcon( self.iconDir + self.actionIconPathDict['x']['normal']), "drawParallelLineX", self, shortcut="1",
+		statusTip="Draw at least 2 vanishing lines for X axis",triggered=self.drawParallelLineX)
 
-		self.drawVanishingLineYAct = QAction(QIcon(self.root + '/icon/y.png'), "drawVanishingLineY", self, shortcut="1",
-		statusTip="&Draw at least 2 vanishing lines for Y axis",triggered=self.drawVanishingLineY)
+		self.drawParallelLineYAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['y']['normal']), "drawParallelLineY", self, shortcut="1",
+		statusTip="Draw at least 2 vanishing lines for Y axis",triggered=self.drawParallelLineY)
 
-		self.drawVanishingLineZAct = QAction(QIcon(self.root + '/icon/z.png'), "drawVanishingLineZ", self, shortcut="1",
-		statusTip="&Draw at least 2 vanishing lines for Z axis",triggered=self.drawVanishingLineZ)
+		self.drawParallelLineZAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['z']['normal']), "drawParallelLineZ", self, shortcut="1",
+		statusTip="Draw at least 2 vanishing lines for Z axis",triggered=self.drawParallelLineZ)
 
-		self.markReferencePointAct = QAction(QIcon(self.root + '/icon/g.png'), "markReferencePoint", self, shortcut="2",
-		statusTip="&Mark Points on ground floor",triggered=self.markReferencePoint)
+		self.markReferencePointAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['r']['normal']), "markReferencePoint", self, shortcut="2",
+		statusTip="Mark Points on ground floor",triggered=self.markReferencePoint)
 
-		self.genVRMLAct = QAction(QIcon(self.root + '/icon/done.png'),"&Generate VRML", self, shortcut="2",
+		self.actionIconPathDict['x']['act'] = self.drawParallelLineXAct
+		self.actionIconPathDict['y']['act'] = self.drawParallelLineYAct
+		self.actionIconPathDict['z']['act'] = self.drawParallelLineZAct
+		self.actionIconPathDict['r']['act'] = self.markReferencePointAct
+
+		self.genVRMLAct = QAction(QIcon( self.iconDir + 'done.png'),"&Generate VRML", self, shortcut="2",
 		statusTip="genVRMLAct",triggered=self.genVRML)
 
 
@@ -350,9 +397,9 @@ class MainWindow(QMainWindow):
 
 
 		self.editToolBar = self.addToolBar("Edit")
-		self.editToolBar.addAction(self.drawVanishingLineXAct)
-		self.editToolBar.addAction(self.drawVanishingLineYAct)
-		self.editToolBar.addAction(self.drawVanishingLineZAct)
+		self.editToolBar.addAction(self.drawParallelLineXAct)
+		self.editToolBar.addAction(self.drawParallelLineYAct)
+		self.editToolBar.addAction(self.drawParallelLineZAct)
 		self.editToolBar.addAction(self.markReferencePointAct)
 		self.editToolBar.addAction(self.genVRMLAct)  
 

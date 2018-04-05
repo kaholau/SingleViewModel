@@ -54,6 +54,11 @@ class ImageViewer(QScrollArea):
 		self.widthbound = 0	#Prevent mouse tracking outside image area
 		self.imageScaleFactor = 1
 
+		self.debugOn = False
+		return
+
+	def setDebug(self,isDebug):
+		self.debugOn = isDebug
 
 		return
 
@@ -72,13 +77,21 @@ class ImageViewer(QScrollArea):
 		print(self.qImageSize,self.hieghtbound,self.widthbound )
 
 		self.imageWidget.start(fileName)
+		config = self.imageWidget.initConfig(fileName)
 		self.isReady = True
 		return
 
-	def drawVanishingLineStart(self,axis):
+	def drawStart(self,act):
+		if act in ['x', 'y', 'z']:
+			 self.drawParallelLineStart(act)
+		else:
+			print('TODO: ref point')
+
+
+	def drawParallelLineStart(self,axis):
 		if self.isReady:			
 			if not self.isDrawVanishingLineStart :
-				print('drawVanishingLineStart :', axis)
+				print('drawParallelLineStart :', axis)
 				self.curAxis = axis
 				self.isDrawVanishingLineStart = True
 
