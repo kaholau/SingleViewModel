@@ -13,11 +13,11 @@ import argparse
 #   note that this resulting vector is just the parameters of
 #   the equation a_i x + b_i y + c_i = 0 of the 2D infinite line
 #   passing through the two endpoints
-def getLineVector(stpt,endpt, w):
-	stpt.append(w)
-	endpt.append(w)
-	e1 = np.array(stpt, dtype='f')
-	e2 = np.array(endpt, dtype='f')
+def getLineVector(stPt,endPt, w):
+	stPt.append(w)
+	endPt.append(w)
+	e1 = np.array(stPt, dtype='f')
+	e2 = np.array(endPt, dtype='f')
 	print(e1,e2)
 	return np.cross(e1,e2)
 
@@ -38,14 +38,30 @@ def getLineVector(stpt,endpt, w):
 #   c) the eigenvector associated with the smallest eigenvalue is
 #      the vanishing point vector V
 
-def computeVanishingPoint(imgH,imgW,linePtList):
-	l = len(linePtList)
-	w = float((imgH + imgW) / 4)
-	print(imgH , imgW, 'w :',w)
-	lines = []
+
+
+def computeVanishingPoint(imgH,imgW,LinePtList):
+	'''
+	input LinePtList is a list of [[start point],[end point]]
+	'''
+	l = len(LinePtList)
 	if l > 1 :
-		for p in linePtList:
+		#w = float((imgH + imgW) / 2)
+		w = 1
+		print(imgH , imgW, 'w :',w)
+
+		print('before:',LinePtList)
+		lines = []
+		for p in LinePtList:
+			#newP = []
+			#for c in p:
+			#	newP.append([c[0]-imgW/2,c[1]-imgH/2])
+			#lines.append(getLineVector(newP[0], newP[1], w))
 			lines.append(getLineVector(p[0], p[1], w))
+		print('after: ', LinePtList)
+		#v = np.cross(lines[0],lines[1])
+		#v = v/v[-1]
+		#return v
 
 		sumM = np.zeros((3,3))
 		for l in lines:
@@ -53,13 +69,20 @@ def computeVanishingPoint(imgH,imgW,linePtList):
 			M = (T * l)
 			print(M)
 			sumM += M
-
+			#sumM += np.transpose(l).dot(l)
+		print('dim : ', np.ndim(sumM))	
 		# Perform eigen decomposition and extract the eigen vector with the smallest eigen value. This corresponds to the vanishing point
-		eigenValues, eigenVectors = sla.eigs(M, k=1, which='SM')
+		eigenValues, eigenVectors = sla.eigs(sumM, k=1, which='SM')
 		eigenVectors = np.transpose(eigenVectors.real)
 		# Convert coordinates into homogeneous form
-		return (eigenVectors[-1]/eigenVectors[-1,-1])
+		
+		print(eigenVectors)
+		print(eigenVectors[-1])
+		print(eigenVectors[-1,-1])
+		HV = eigenVectors[-1]/eigenVectors[-1,-1]
+		#imgV = [HV[0] + imgW, HV[1] + imgH]
+		return HV
 		
 	else:
-		print('No enough Line for calculating vanishing point')
+		print('Not enough line for calculating vanishing point')
 		return None 

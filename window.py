@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
 	#===========================Menu>File Action Funtion===================================#
 	def open(self):
 		if self.debugOn:
-			fileName = self.root + '/picture/example.png'
+			fileName = self.root + '/picture/example3.jpg'
 		else:
 			fileName, _ = QFileDialog.getOpenFileName(self, "Open Image", QDir.currentPath())
 
@@ -186,7 +186,7 @@ class MainWindow(QMainWindow):
 		return
 	
 	#=========================Menu>Action Action Function================================#
-	def unselectAllactionIcon(self):
+	def unselectAllActionIcon(self):
 		self.drawParallelLineXAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['x']['normal']))
 		self.drawParallelLineYAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['y']['normal']))
 		self.drawParallelLineZAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['z']['normal']))
@@ -194,7 +194,7 @@ class MainWindow(QMainWindow):
 		return	
 
 	def selectIcon(self,act):
-		self.unselectAllactionIcon()
+		self.unselectAllActionIcon()
 		icon = QIcon()
 		icon.addPixmap(QPixmap(self.root + '/icon/' + self.actionIconPathDict[act]['selected']))
 		self.actionIconPathDict[act]['act'].setIcon(icon)
@@ -231,9 +231,10 @@ class MainWindow(QMainWindow):
 
 	def genVRML(self):
 		print('genVRML')
-		self.graphicsView.genVRMLStart(True)
-		if self.graphicsView.genVRMLDone(True):
-			print('genVRML done')
+		self.curDraw = '3d'
+		self.unselectAllActionIcon()
+		self.graphicsView.drawStart(self.curDraw)
+
 		return
 
 

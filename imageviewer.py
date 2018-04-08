@@ -79,39 +79,45 @@ class ImageViewer(QScrollArea):
 		print(self.qImageSize,self.hieghtbound,self.widthbound )
 
 		self.imageWidget.start(fileName)
-		fileName = fileName.split('.')[0] + '.json'
+		fileName = fileName[:-(fileName[::-1].index('.'))] + 'json'
 		config = self.imageWidget.initConfig(fileName)
 		self.isReady = True
 		return
 
 	def drawStart(self,act):
-		self.isDrawParallelLineStart = False
-		self.isMarkReferencePointStart = False
-		if act in ['x', 'y', 'z']:
-			 self.drawParallelLineStart(act)
+
+		if self.isReady:
+			self.isDrawParallelLineStart = False
+			self.isMarkReferencePointStart = False
+			if act in ['x', 'y', 'z']:
+				self.cleanPaintBoard() 
+				self.drawParallelLineStart(act)
+			elif act == 'r':
+				self.cleanPaintBoard() 
+				print('TODO: ref point')
+			elif act == '3d':
+				self.cleanPaintBoard() 
+				self.genVRMLStart()
 		else:
-			print('TODO: ref point')
+			print('no image')		
+		
+		return 
 
 	def cleanPaintBoard(self):
 		self.paintBoard = self.cvImg.copy()
-		self.qImage = self.get_qimage(self.paintBoard)
-		self.imageWidget.setPixmap(self.qImage)
+		self.show(self.paintBoard)
 		return
 
-	def drawParallelLineStart(self,axis):
-		if self.isReady:			
-			if not self.isDrawParallelLineStart :
-				self.curAxis = axis
-				self.isDrawParallelLineStart = True
-
-				print('drawParallelLineStart :', axis)
-				self.cleanPaintBoard()
-				lines = self.imageWidget.getParallelLine(axis)
-				print(lines)
-				if len(lines) > 0 :
-					for p in lines:
-						self.drawParallelLine(True, p[0], p[1])
-				
+	def drawParallelLineStart(self,axis):	
+		if not self.isDrawParallelLineStart :
+			self.curAxis = axis
+			self.isDrawParallelLineStart = True
+			print('drawParallelLineStart :', axis)
+			lines = self.imageWidget.getParallelLine(axis)
+			if len(lines) > 0 :
+				for p in lines:
+					self.drawParallelLine(True, p[0], p[1])
+			
 
 		return
 
@@ -170,15 +176,13 @@ class ImageViewer(QScrollArea):
 		return  
 
 	def drawPoint(self,img,pt):
-		cv2.circle(img,(pt[0],pt[1]), 2, (255,0,0), -1)
-		self.qImage = self.get_qimage(img)
-		self.imageWidget.setPixmap(self.qImage)
+		cv2.circle(img,(int(pt[0]),int(pt[1])), 2, (255,0,0), -1)
+		self.show(img)
 		return
 
 	def drawLine(self,img,sPt,ePt):
-		cv2.line(img,(sPt[0],sPt[1]),(ePt[0],ePt[1]),self.axisColor[self.curAxis],2)
-		self.qImage = self.get_qimage(img)
-		self.imageWidget.setPixmap(self.qImage)
+		cv2.line(img,(int(sPt[0]),int(sPt[1])),(int(ePt[0]),int(ePt[1])),self.axisColor[self.curAxis],2)
+		self.show(img)
 		return
 
 	def drawParallelLine(self,isConfirm,sPt,ePt):
@@ -193,15 +197,17 @@ class ImageViewer(QScrollArea):
 
 		return
 
-	def computeVanishingPoint(self,axis):
-		self.parallelLines[axis] = [[[276, 148], [214, 295]], [[335, 146], [383, 313]]]
-		if len( self.parallelLines[axis]) > 1 :
-			print('vanishingLineList: ', self.parallelLines[axis])
-			pt = self.imageWidget.computeVanishingPoint(self.parallelLines[axis], axis)
-			print('vanishing pt: ',pt)
-			self.drawPoint(self.paintBoard,pt)
-			return True
-		return False
+	def genVRMLStart(self):
+		img = self.paintBoard
+		if self.imageWidget.compute3Dmodel():
+			V = self.imageWidget.getVanishingPoints()
+			print('draw vanishing point:',V)
+			for p in V:
+				if len(p)>1:
+					self.drawPoint(img,p)
+			print('genVRML done')
+		self.show(img)
+		return 
 
 	def get_qimage(self, image: np.ndarray):
 		height, width, colors = image.shape
@@ -210,6 +216,11 @@ class ImageViewer(QScrollArea):
 
 		image = image.rgbSwapped()
 		return QPixmap.fromImage(image)
+
+	def show(self,img):
+		self.qImage = self.get_qimage(img)
+		self.imageWidget.setPixmap(self.qImage)
+		return
 
 	def clean(self, act):
 		if self.isReady:
