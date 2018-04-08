@@ -32,6 +32,7 @@ class ImageViewer(QScrollArea):
 		#store line info
 		#self.parallelLines = {'x' : [], 'y' : [], 'z' : [], None:[]} # list of [[start pt, end pt],[]......]
 		self.axisColor = {'x' : (255,0,0), 'y' : (0,255,0), 'z' : (0,0,255)}
+		self.axis = ['x','y','z']
 		self.tempPoint = [] # store 
 		self.refGroundList = [] 
 
@@ -175,8 +176,8 @@ class ImageViewer(QScrollArea):
 					self.tempPoint = []
 		return  
 
-	def drawPoint(self,img,pt):
-		cv2.circle(img,(int(pt[0]),int(pt[1])), 2, (255,0,0), -1)
+	def drawPoint(self,img,pt, clr = (255,0,0)):
+		cv2.circle(img,(int(pt[0]),int(pt[1])), 2, clr, -1)
 		self.show(img)
 		return
 
@@ -202,9 +203,9 @@ class ImageViewer(QScrollArea):
 		if self.imageWidget.compute3Dmodel():
 			V = self.imageWidget.getVanishingPoints()
 			print('draw vanishing point:',V)
-			for p in V:
+			for i,p in enumerate(V):
 				if len(p)>1:
-					self.drawPoint(img,p)
+					self.drawPoint(img,p,self.axisColor[self.axis[i]])
 			print('genVRML done')
 		self.show(img)
 		return 

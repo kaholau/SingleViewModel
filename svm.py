@@ -18,7 +18,7 @@ def getLineVector(stPt,endPt, w):
 	endPt.append(w)
 	e1 = np.array(stPt, dtype='f')
 	e2 = np.array(endPt, dtype='f')
-	print(e1,e2)
+	#print(e1,e2)
 	return np.cross(e1,e2)
 
 
@@ -46,11 +46,10 @@ def computeVanishingPoint(imgH,imgW,LinePtList):
 	'''
 	l = len(LinePtList)
 	if l > 1 :
-		#w = float((imgH + imgW) / 2)
+		#w = float((imgH/2 + imgW/2) / 2)
 		w = 1
 		print(imgH , imgW, 'w :',w)
-
-		print('before:',LinePtList)
+		print(LinePtList)
 		lines = []
 		for p in LinePtList:
 			#newP = []
@@ -58,7 +57,7 @@ def computeVanishingPoint(imgH,imgW,LinePtList):
 			#	newP.append([c[0]-imgW/2,c[1]-imgH/2])
 			#lines.append(getLineVector(newP[0], newP[1], w))
 			lines.append(getLineVector(p[0], p[1], w))
-		print('after: ', LinePtList)
+		
 		#v = np.cross(lines[0],lines[1])
 		#v = v/v[-1]
 		#return v
@@ -67,18 +66,18 @@ def computeVanishingPoint(imgH,imgW,LinePtList):
 		for l in lines:
 			T = np.reshape(l, (3, 1))
 			M = (T * l)
-			print(M)
+			#print(M)
 			sumM += M
 			#sumM += np.transpose(l).dot(l)
-		print('dim : ', np.ndim(sumM))	
+
 		# Perform eigen decomposition and extract the eigen vector with the smallest eigen value. This corresponds to the vanishing point
 		eigenValues, eigenVectors = sla.eigs(sumM, k=1, which='SM')
 		eigenVectors = np.transpose(eigenVectors.real)
 		# Convert coordinates into homogeneous form
 		
-		print(eigenVectors)
-		print(eigenVectors[-1])
-		print(eigenVectors[-1,-1])
+		#print(eigenVectors)
+		#print(eigenVectors[-1])
+		#print(eigenVectors[-1,-1])
 		HV = eigenVectors[-1]/eigenVectors[-1,-1]
 		#imgV = [HV[0] + imgW, HV[1] + imgH]
 		return HV

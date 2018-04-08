@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
 	#===========================Menu>File Action Funtion===================================#
 	def open(self):
 		if self.debugOn:
-			fileName = self.root + '/picture/example3.jpg'
+			fileName = self.root + '/picture/example.png'
 		else:
 			fileName, _ = QFileDialog.getOpenFileName(self, "Open Image", QDir.currentPath())
 

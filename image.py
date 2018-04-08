@@ -94,7 +94,7 @@ class Image(QLabel):
 				v = svm.computeVanishingPoint(self.cvImgH, self.cvImgW, lines)
 				print(axis + "vanishing point is :"  )
 				print(v)
-				self.config[axis]['vanishingPoint'] = v
+				self.config[axis]['vanishingPoint'] = list(v)
 			else:
 				print('no vanishingPoint computed for ',axis)	
 
