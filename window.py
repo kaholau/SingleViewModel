@@ -38,7 +38,9 @@ class MainWindow(QMainWindow):
 		self.drawParallelLineXAct.setEnabled(False)
 		self.drawParallelLineYAct.setEnabled(False)
 		self.drawParallelLineZAct.setEnabled(False)
-		self.markReferencePointAct.setEnabled(False)
+		self.markReferencePointXAct.setEnabled(False)
+		self.markReferencePointYAct.setEnabled(False)
+		self.markReferencePointZAct.setEnabled(False)
 		self.genVRMLAct.setEnabled(False)
 
 		self.cleanAct.setEnabled(False)
@@ -87,11 +89,15 @@ class MainWindow(QMainWindow):
 			self.graphicsView.initForImage(fileName)
 			self.scaleFactor = 1.0
 			self.normalSize()
-			self.drawParallelLineXAct.setEnabled(True)
+
 			self.drawParallelLineXAct.setEnabled(True)
 			self.drawParallelLineYAct.setEnabled(True)
 			self.drawParallelLineZAct.setEnabled(True)
-			self.markReferencePointAct.setEnabled(True)
+			self.markReferencePointXAct.setEnabled(True)
+			self.markReferencePointYAct.setEnabled(True)
+			self.markReferencePointZAct.setEnabled(True)
+			
+			
 			self.genVRMLAct.setEnabled(True)
 			self.cleanAct.setEnabled(True)
 			self.normalSizeAct.setEnabled(True)
@@ -190,7 +196,9 @@ class MainWindow(QMainWindow):
 		self.drawParallelLineXAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['x']['normal']))
 		self.drawParallelLineYAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['y']['normal']))
 		self.drawParallelLineZAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['z']['normal']))
-		self.markReferencePointAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['r']['normal']))
+		self.markReferencePointXAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['rx']['normal']))
+		self.markReferencePointYAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['ry']['normal']))
+		self.markReferencePointZAct.setIcon(QIcon( self.iconDir + self.actionIconPathDict['rz']['normal']))
 		return	
 
 	def selectIcon(self,act):
@@ -223,10 +231,27 @@ class MainWindow(QMainWindow):
 		self.draw(self.curDraw)
 		return
 
-	def markReferencePoint(self):
-		print('markReferencePoint')
-		self.curDraw = 'r'
+	def markReferencePoint(self,axis):
+		self.selectIcon(self.curDraw)
 		self.draw(self.curDraw)
+		return
+
+	def markReferencePointX(self):
+		print('markReferencePoint')
+		self.curDraw = 'rx'
+		self.markReferencePoint(self.curDraw)
+		return
+
+	def markReferencePointY(self):
+		print('markReferencePoint')
+		self.curDraw = 'ry'
+		self.markReferencePoint(self.curDraw)
+		return
+
+	def markReferencePointZ(self):
+		print('markReferencePoint')
+		self.curDraw = 'rz'
+		self.markReferencePoint(self.curDraw)
 		return
 
 	def genVRML(self):
@@ -332,7 +357,9 @@ class MainWindow(QMainWindow):
 			'x':{'normal':'x.png','selected':'x_selected.png'},
 			'y':{'normal':'y.png','selected':'y_selected.png'},
 			'z':{'normal':'z.png','selected':'z_selected.png'},
-			'r':{'normal':'r.png','selected':'r_selected.png'}}
+			'rx':{'normal':'r.png','selected':'r_selected.png'},
+			'ry':{'normal':'r.png','selected':'r_selected.png'},
+			'rz':{'normal':'r.png','selected':'r_selected.png'}}
 
 		self.iconDir = self.root +'/icon/'
 		self.drawParallelLineXAct = QAction(QIcon( self.iconDir + self.actionIconPathDict['x']['normal']), "drawParallelLineX", self, shortcut="1",
@@ -344,13 +371,22 @@ class MainWindow(QMainWindow):
 		self.drawParallelLineZAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['z']['normal']), "drawParallelLineZ", self, shortcut="1",
 		statusTip="Draw at least 2 vanishing lines for Z axis",triggered=self.drawParallelLineZ)
 
-		self.markReferencePointAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['r']['normal']), "markReferencePoint", self, shortcut="2",
-		statusTip="Mark Points on ground floor",triggered=self.markReferencePoint)
+		self.markReferencePointXAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['rx']['normal']), "markReferencePointX", self, shortcut="2",
+		statusTip="Mark Points on ground floor for X axis",triggered=self.markReferencePointX)
+
+		self.markReferencePointYAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['ry']['normal']), "markReferencePointY", self, shortcut="2",
+		statusTip="Mark Points on ground floor for Y axis",triggered=self.markReferencePointY)
+
+		self.markReferencePointZAct = QAction(QIcon(self.iconDir + self.actionIconPathDict['rz']['normal']), "markReferencePointZ", self, shortcut="2",
+		statusTip="Mark Points for height for Z axis",triggered=self.markReferencePointZ)
+
 
 		self.actionIconPathDict['x']['act'] = self.drawParallelLineXAct
 		self.actionIconPathDict['y']['act'] = self.drawParallelLineYAct
 		self.actionIconPathDict['z']['act'] = self.drawParallelLineZAct
-		self.actionIconPathDict['r']['act'] = self.markReferencePointAct
+		self.actionIconPathDict['rx']['act'] = self.markReferencePointXAct
+		self.actionIconPathDict['ry']['act'] = self.markReferencePointYAct
+		self.actionIconPathDict['rz']['act'] = self.markReferencePointZAct
 
 		self.genVRMLAct = QAction(QIcon( self.iconDir + 'done.png'),"&Generate VRML", self, shortcut="2",
 		statusTip="genVRMLAct",triggered=self.genVRML)
@@ -403,6 +439,8 @@ class MainWindow(QMainWindow):
 		self.editToolBar.addAction(self.drawParallelLineXAct)
 		self.editToolBar.addAction(self.drawParallelLineYAct)
 		self.editToolBar.addAction(self.drawParallelLineZAct)
-		self.editToolBar.addAction(self.markReferencePointAct)
+		self.editToolBar.addAction(self.markReferencePointXAct)
+		self.editToolBar.addAction(self.markReferencePointYAct)
+		self.editToolBar.addAction(self.markReferencePointZAct)
 		self.editToolBar.addAction(self.genVRMLAct)  
 

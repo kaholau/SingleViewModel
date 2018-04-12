@@ -11,6 +11,10 @@
 		"linePoints":[],
 		"vanishingPoint":[]
 	},
-	"r":[]
+	"r":{
+		"rx":[],
+		"ry":[],
+		"rz":[]
+	}
 
 }

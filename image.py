@@ -16,6 +16,8 @@ class Image(QLabel):
 		self.config = ''
 		self.configFilePath = ''
 		self.axis = ['x','y','z']
+		self.rAxis = ['rx', 'ry', 'rz']
+		self.computeVanishingLine = {'xy':[],'yz':[],'xz':[]}
 		return
 
 	def start(self,imgPath):
@@ -65,10 +67,15 @@ class Image(QLabel):
 			self.config[act]['linePoints'] = []
 			self.config[act]['vanishingPoint'] = []
 			print('clean ' + act)
+		if act in self.rAxis:
+			self.config['r'][act] = []
+			print('clean ' + act)
 
 		return		
 	def getParallelLine(self,axis):
 		''' called by imageviewer for displaying parallel line for corresponding axis
+
+		@param axis
 
 		'''
 		return self.config[axis]['linePoints']
@@ -78,6 +85,9 @@ class Image(QLabel):
 		''' lines are points  [[x1,y1],[x2,y2]].
 		Called by imageviewr after paralled is drawn for axis.
 
+		@param axis
+		@param lines
+
 		'''	
 		self.config[axis]['linePoints'].append(lines)
 		return
@@ -86,6 +96,7 @@ class Image(QLabel):
 	def computeVanishingPoint(self):
 		'''compute vanishing point and stored in dictionary.
 		Caution: this config here is not saved in file
+
 
 		'''
 		for axis in self.axis:
@@ -100,13 +111,34 @@ class Image(QLabel):
 
 		return
 
+	def computeVanishingLine(self):
+		x = self.config['x']['vanishingPoint']
+		y = self.config['y']['vanishingPoint']
+		z = self.config['z']['vanishingPoint']
+		self.computeVanishingLine['xy'] = np.cross(x,y)
+		self.computeVanishingLine['xz'] = np.cross(x,z)
+		self.computeVanishingLine['yz'] = np.cross(y,z)
+
+		return
+
 	def getVanishingPoints(self):
 		V = []
 		for a in self.axis:
 			V.append(self.config[a]['vanishingPoint'])
 		return V
 
+	def addReferencePoint(self, axis, point):
+		self.config['r'][axis].append(point)
+		return
 
+	def getReferencePoint(self,axis):
+		'''
+			helper function to retrieve reference point to the aixs
+
+			@param axis
+			@return list of point
+		'''
+		return self.config['r'][axis] 
 	
 	     
 	def compute3Dmodel(self):

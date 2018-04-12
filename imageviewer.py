@@ -93,9 +93,9 @@ class ImageViewer(QScrollArea):
 			if act in ['x', 'y', 'z']:
 				self.cleanPaintBoard() 
 				self.drawParallelLineStart(act)
-			elif act == 'r':
+			elif act in ['rx','ry','rz']:
 				self.cleanPaintBoard() 
-				print('TODO: ref point')
+				self.markReferencePointStart(act)
 			elif act == '3d':
 				self.cleanPaintBoard() 
 				self.genVRMLStart()
@@ -118,6 +118,19 @@ class ImageViewer(QScrollArea):
 			if len(lines) > 0 :
 				for p in lines:
 					self.drawParallelLine(True, p[0], p[1])
+			
+
+		return
+
+	def markReferencePointStart(self,axis):	
+		if not self.isMarkReferencePointStart :
+			self.curAxis = axis
+			self.isMarkReferencePointStart = True
+			print('markReferencePointStart :', axis)
+			pts = self.imageWidget.getReferencePoint(axis)
+			if len(pts) > 0 :
+				for p in pts:
+					self.markReferencePoint(p)
 			
 
 		return
@@ -152,6 +165,8 @@ class ImageViewer(QScrollArea):
 				if self.isDrawParallelLineStart:
 					self.tempPoint.append([x,y])
 					#self.drawPoint(self.paintBoard, [x,y])
+				if self.isMarkReferencePointStart:
+					self.tempPoint.append([x,y])
 		return 
 
 	def mouseMoveEvent(self, event):
@@ -174,17 +189,25 @@ class ImageViewer(QScrollArea):
 					self.drawParallelLine(True, self.tempPoint[0], self.tempPoint[1])
 					self.imageWidget.addParallelLine(self.curAxis, self.tempPoint)
 					self.tempPoint = []
+				if self.isMarkReferencePointStart:
+					self.markReferencePoint(self.tempPoint[0])
+					self.imageWidget.addReferencePoint(self.curAxis,self.tempPoint[0])
+					self.tempPoint = []
 		return  
 
-	def drawPoint(self,img,pt, clr = (255,0,0)):
-		cv2.circle(img,(int(pt[0]),int(pt[1])), 2, clr, -1)
+	def drawPoint(self, img, pt, clr = (255,0,0)):
+		cv2.circle(img,(int(pt[0]),int(pt[1])), 3, clr, -1)
 		self.show(img)
 		return
 
-	def drawLine(self,img,sPt,ePt):
-		cv2.line(img,(int(sPt[0]),int(sPt[1])),(int(ePt[0]),int(ePt[1])),self.axisColor[self.curAxis],2)
+	def drawLine(self, img, sPt, ePt, clr = (255,0,0)):
+		cv2.line(img,(int(sPt[0]),int(sPt[1])),(int(ePt[0]),int(ePt[1])),clr ,2)
 		self.show(img)
 		return
+	
+	def markReferencePoint(self,pt):
+	 	self.drawPoint(self.paintBoard,pt,(0,0,0))
+	 	return
 
 	def drawParallelLine(self,isConfirm,sPt,ePt):
 		if isConfirm:
@@ -193,9 +216,7 @@ class ImageViewer(QScrollArea):
 			isConfirm = False
 		else:
 			img = self.paintBoard.copy()
-		self.drawLine(img,sPt,ePt)
-		return
-
+		self.drawLine(img,sPt,ePt,self.axisColor[self.curAxis])
 		return
 
 	def genVRMLStart(self):
